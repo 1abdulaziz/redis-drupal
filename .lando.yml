@@ -1,0 +1,39 @@
+name: drupal9
+recipe: drupal9
+config:
+  webroot: web
+  php: 8.1
+tooling:
+  phpcs:
+    service: appserver
+    cmd: "/app/vendor/bin/phpcs --standard=Drupal,DrupalPractice"
+    description: Run phpcs Drupal Coding Standards against a given file or directory.
+  phpcbf:
+    service: appserver
+    cmd: "/app/vendor/bin/phpcbf --standard=Drupal"
+    description: Automatically fix Drupal coding standards suggestions.
+  redis-cli:
+    service: cache
+services:
+  cache:
+    type: redis:4.0
+    portforward: 6380
+    persist: true
+  phpmyadmin:
+    type: phpmyadmin
+    hosts:
+      - database
+  appserver:
+    overrides:
+      ports:
+        - "0.0.0.0::80"
+      environment:
+        PHP_SENDMAIL_PATH: '/usr/sbin/sendmail -S mailhog:1025'
+  mailhog:
+    type: mailhog
+    portforward: true
+    hogfrom:
+      - appserver
+proxy:
+  mailhog:
+    - mail.lndo.site
